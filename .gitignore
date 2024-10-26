@@ -1,0 +1,17 @@
+.vscode
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.GeoIP.conf
+*.vsdix
+.vs/slnx.sqlite
+.env
+/metricbeat/
+/logstash/
+/elastic-agent/
+/elasticsearch/
+elasticsearch/dockerfile
+docker-compose.elastic.yml
+docker-entrypoint.sh
