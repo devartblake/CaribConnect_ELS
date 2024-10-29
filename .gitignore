@@ -12,6 +12,7 @@ node_modules/
 /logstash/
 /elastic-agent/
 /elasticsearch/
-elasticsearch/dockerfile
+elasticsearch.dockerfile2
 docker-compose.elastic.yml
 docker-entrypoint.sh
+backend/uv.lock

@@ -19,7 +19,23 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
-
+  
+  # MongoDB secondary database
+  mongodb:
+    build: 
+      context: .
+      dockerfile: mongodb.dockerfile
+    container_name: MongoDB
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_DB_NAME: ${MONGO_DB_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGODB_HOST_NAME}:27017
+    volumes:
+      - mongo_data:/data/db
+    
   adminer:
     container_name: Adminer-DB_Manage
     image: adminer
@@ -312,6 +328,7 @@ volumes:
     driver: local
   esdata02:
     driver: local
+  mongo_data:
 
 networks:
   traefik-public:

@@ -1,4 +1,4 @@
-export const $Body_login_login_access_token = {
+export const $BodyLoginAccessToken = {
   properties: {
     grant_type: {
       type: "any-of",

@@ -3,7 +3,7 @@ import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 
 import type {
-  Body_login_login_access_token,
+  BodyLoginAccessToken,
   Message,
   NewPassword,
   Token,
@@ -21,7 +21,7 @@ import type {
 } from "./models"
 
 export type TDataLoginAccessToken = {
-  formData: Body_login_login_access_token
+  formData: BodyLoginAccessToken
 }
 export type TDataRecoverPassword = {
   email: string

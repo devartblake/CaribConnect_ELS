@@ -1,4 +1,4 @@
-export type Body_login_login_access_token = {
+export type BodyLoginAccessToken = {
   grant_type?: string | null
   username: string
   password: string

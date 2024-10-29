@@ -10,6 +10,10 @@ dependencies = [
     "passlib[bcrypt]<2.0.0,>=1.7.4",
     "tenacity<9.0.0,>=8.2.3",
     "pydantic>2.0",
+    # Payment Provider SDK BEGIN
+    "stripe>=5.0.0",
+    "paypal-server-sdk==0.5.1",
+    # Payment Provider SDK END
     # Redis & Celery message brokers BEGIN
     "aio-pika<9.4.3",
     "aioredis<2.0.1",
@@ -22,6 +26,7 @@ dependencies = [
     # Messagge Brokers END
     "emails<1.0,>=0.6",
     "jinja2<4.0.0,>=3.1.4",
+    "mjml<0.11.0",
     # MaxMind GeoIP BEGIN
     "geoip2<4.8.0",    
     "maxminddb==2.6.2",
@@ -31,6 +36,11 @@ dependencies = [
     "requests==2.32.3",
     "itsdangerous==2.2.0",
     "json_log_formatter<1.1",
+    # MongoDB BEGIN
+    "dnspython<=2.7.0",
+    "motor<=3.6.0",
+    "pymongo<=4.9.2",
+    # MongoDB END
     "qrcode<8.0",
     "alembic<2.0.0,>=1.12.1",
     "httpx<1.0.0,>=0.25.1",

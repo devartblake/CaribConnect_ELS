@@ -72,13 +72,13 @@ class IPAddressBase(BaseModel):
     class Config:
         orm_mode = True
 
-class IPAddressCreate(IPAddressBase):
+class IPAddressCreateSchema(IPAddressBase):
     pass
 
-class IPAddressUpdate(IPAddressBase):
+class IPAddressUpdateSchema(IPAddressBase):
     ip_address: IPvAnyAddress | None = None
 
-class IPAddressRead(IPAddressBase):
+class IPAddressReadSchema(IPAddressBase):
     id: int
     city: CitySchema | None = None
     country: CountrySchema | None = None
@@ -89,7 +89,7 @@ class IPAddressRead(IPAddressBase):
     class Config:
         orm_mode = True
 
-class IPAddressDetail(IPAddressRead):
+class IPAddressDetailSchema(IPAddressReadSchema):
     geo_location: GeoLocationSchema | None = None  # Nested GeoLocation details
 
     class Config:

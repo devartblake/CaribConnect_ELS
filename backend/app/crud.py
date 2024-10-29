@@ -13,7 +13,7 @@ from app.models import (
     UserCreate,
     UserUpdate,
 )
-from app.schemas.ipvSchema import IPAddressCreate
+from app.schemas.ipvSchema import IPAddressCreateSchema
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -63,7 +63,7 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     return db_item
 
 # Create IP Address
-def create_ip_address(session: Session, ip_address_create: IPAddressCreate) -> IPAddress:
+def create_ip_address(session: Session, ip_address_create: IPAddressCreateSchema) -> IPAddress:
     ip_address = IPAddress.from_orm(ip_address_create)
     session.add(ip_address)
     session.commit()

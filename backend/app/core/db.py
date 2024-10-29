@@ -3,9 +3,15 @@ from sqlmodel import Session, create_engine, select
 from app import crud
 from app.core.config import settings
 from app.models import User, UserCreate
+from motor.motor_asyncio import AsyncIOMotorClient
 
-# Create the engine
+# Create the SQLAlchemy (SQLModel)
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+SessionLocal = Session(autocommit=False, autoflush=False, bind=engine)
+
+# Initialize MongoDB (Motor) setup
+mongodb_client: AsyncIOMotorClient = None
+mongodb_db = None
 
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
@@ -34,3 +40,26 @@ def init_db(session: Session) -> None:
             is_superuser=True,
         )
         user = crud.create_user(session=session, user_create=user_in)
+
+# Dependency to get a session
+def get_database_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Initialize MongoDB
+async def init_mongo():
+    global mongodb_client, mongodb_db
+    mongodb_client = AsyncIOMotorClient(settings.MONGO_URI)
+    mongodb_db = mongodb_client[settings.MONGO_DB_NAME]
+
+async def close_mongo_connection():
+    global mongodb_client
+    if mongodb_client:
+        mongodb_client.close()
+        
+# Dependency to get MongoDB connection
+def get_mongodb():
+    return mongodb_db

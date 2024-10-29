@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { AxiosError } from "axios"
 import {
-  type Body_login_login_access_token as AccessToken,
+  type BodyLoginAccessToken as AccessToken,
   type ApiError,
   LoginService,
   type UserPublic,

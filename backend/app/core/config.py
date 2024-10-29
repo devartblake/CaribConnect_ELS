@@ -1,3 +1,4 @@
+import os
 import secrets
 import warnings
 from typing import Annotated, Any, Literal, Self
@@ -36,6 +37,10 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
 
+    #Timezones
+    USE_TZ: bool = True
+    TIME_ZONE:str = "UTC"
+    
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
@@ -96,6 +101,29 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
 
+    # Redis settings
+    REDIS_HOST: str =  "localhost"
+    REDIS_PORT: int =  6379
+    REDIS_URL: str = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"  # Redis URL for Celery backend and cache
+
+    # RabbitMQ settings
+    RABBITMQ_HOST: str = os.getenv("RABBITMQ_HOST", "localhost")
+    RABBITMQ_PORT: str = os.getenv("RABBITMQ_PORT", "5672")
+    RABBITMQ_USER: str = os.getenv("RABBITMQ_USER", "celreyuser")
+    RABBITMQ_PASSWORD: str = os.getenv("RABBITMQ_PASSWORD", "rabbitpass")
+    RABBITMQ_VHOST: str = os.getenv("RABBITMQ_VHOST", "/")
+
+    # Celery configurations
+    CELERY_BROKER_URL: str = f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}:{RABBITMQ_PORT}/{RABBITMQ_VHOST}"
+    CELERY_RESULT_BACKEND: str = f"redis://${REDIS_HOST}:${REDIS_PORT}/0"
+    CELERY_TIMEZONE: str = TIME_ZONE
+    CELERY_TASK_SERIALIZER: str = "json"
+    CELERY_RESULT_SERIALIZER: str = "json"
+    
+    # MongoDB settings
+    MONGO_URI: str = "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${DOMAIN}:27017"
+    MONGO_DB_NAME: str = "log"
+    
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

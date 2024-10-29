@@ -1,3 +1,7 @@
+from contextlib import asynccontextmanager
+
+from sqlmodel import Session
+from app.core.db import close_mongo_connection, init_db, init_mongo
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -30,4 +34,16 @@ if settings.all_cors_origins:
         allow_headers=["*"],
     )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize MongoDB on startup
+    await init_mongo()
+    # Create superuser for SQLAlchemy-based DB if needed
+    with Session(engine) as session:
+        init_db(session)
+    yield
+    # Close MongoDB connection on shutdown
+    await close_mongo_connection()
+    
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.router.lifespan = lifespan
