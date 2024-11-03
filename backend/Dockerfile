@@ -1,6 +1,8 @@
 FROM python:3.12
 
+# Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app/
 
@@ -31,6 +33,7 @@ ENV PYTHONPATH=/app
 
 COPY ./scripts /app/scripts
 
+# Copy only the essential files for dependency installation
 COPY ./pyproject.toml ./uv.lock ./alembic.ini /app/
 
 COPY ./app /app/app

@@ -1,0 +1,79 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_DATABASE: testdb
+        options: --health-cmd="mongosh --eval 'db.adminCommand('ping')'" --health-interval=10s --health-timeout=5s --health-retries=3
+          
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: latest
+
+      - name: Install dependencies with uv
+        run: |
+          pip install uv
+          uv install
+
+      - name: Run tests
+        env:
+          DATABASE_URL: mongodb://localhost:27017/testdb
+        run: |
+          pytest
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: latest
+
+      - name: Build Docker image
+        run: docker build -t caribconnect_els:latest .
+
+      - name: Push Docker image to registry
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker tag caribconnect_els:latest your-dockerhub-repo/caribconnect_els:latest
+          docker push your-dockerhub-repo/caribconnect_els:latest
+
+      - name: Deploy to server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          ssh -i $SSH_PRIVATE_KEY $SERVER_USER@$SERVER_HOST << 'EOF'
+          docker pull your-dockerhub-repo/caribconnect_els:latest
+          docker stop caribconnect_container || true
+          docker rm caribconnect_container || true
+          docker run -d --name caribconnect_container -p 8000:8000 your-dockerhub-repo/caribconnect_els:latest
+          EOF

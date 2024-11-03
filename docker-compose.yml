@@ -22,20 +22,36 @@ services:
   
   # MongoDB secondary database
   mongodb:
+    image: mongo
     build: 
       context: .
       dockerfile: mongodb.dockerfile
     container_name: MongoDB
-    ports:
-      - "27017:27017"
+    restart: always
     environment:
       MONGO_DB_NAME: ${MONGO_DB_NAME}
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGODB_HOST_NAME}:27017
+      MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST_NAME}:27017
     volumes:
       - mongo_data:/data/db
-    
+
+  # MongoDB GUI
+  mongo-gui:
+    container_name: Mongo-gui
+    image: mongo-express:${MONGODB_GUI_VERSION} # https://hub.docker.com/_/mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+    ports:
+      - 8081:8081
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  # AdMiner Database Management 
   adminer:
     container_name: Adminer-DB_Manage
     image: adminer
@@ -114,6 +130,7 @@ services:
       - DOMAIN=${DOMAIN}
       - FRONTEND_HOST=${FRONTEND_HOST?Variable not set}
       - ENVIRONMENT=${ENVIRONMENT}
+      - AVATAR_DATA_FOLDER=_data/avatar-data
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
       - SECRET_KEY=${SECRET_KEY?Variable not set}
       - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
@@ -128,13 +145,11 @@ services:
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/health-check/"]
       interval: 10s
       timeout: 5s
       retries: 5
-
     build:
       context: ./backend
     labels:
@@ -154,6 +169,24 @@ services:
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect
+
+  # Neo4J Graph Database
+  neo4j:
+    container_name: Neo4J-DB
+    image: neo4j:latest
+    volumes:
+      - ./data/neo4j/logs:/logs
+      - ./data/neo4j/config:/config
+      - ./data/neo4j/data:/data
+      - ./data/neo4j/plugins:/plugins
+    environment:
+      - NEO4J_AUTH=neo4j/changethis
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: always
+    secrets:
+      - neo4j_auth_file
 
   # RabbitMQ Messaging Broker
   rabbit-mq:
@@ -320,6 +353,12 @@ services:
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+
+# Secrets file location
+secrets:
+  neo4j_auth_file:
+    file: ./neo4j_auth.txt
+
 volumes:
   app-db-data:
   rabbitmq_data:

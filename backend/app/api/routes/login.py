@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from typing import Annotated, Any
 
@@ -20,6 +21,8 @@ from app.utils import (
 
 router = APIRouter()
 
+# Get logger for module
+LOGGER = logging.getLogger(__name__)
 
 @router.post("/login/access-token")
 def login_access_token(

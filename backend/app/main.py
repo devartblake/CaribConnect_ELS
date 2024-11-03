@@ -5,11 +5,16 @@ from app.core.db import close_mongo_connection, init_db, init_mongo
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
+from fastapi.encoders import jsonable_encoder
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.staticfiles import StaticFiles
 
 from app.api.main import api_router
 from app.core.config import settings
-
+from app.core.exceptions import HTTPExceptionJSON
+from app.profiles.exceptions import UnexpectedRelationshipState
 
 def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
@@ -34,6 +39,25 @@ if settings.all_cors_origins:
         allow_headers=["*"],
     )
 
+# Add exception hnadlers
+@app.exception_handler(HTTPExceptionJSON)
+async def http_exception_handler(
+        request: Request,
+        exc: HTTPExceptionJSON):
+    json_data = jsonable_encoder(exc.data)
+    return JSONResponse(
+        status_code=exc.status_code,
+        headers=exc.headers,
+        content={"message": exc.detail, "code": exc.code, "error": json_data})
+    
+@app.exception_handler(UnexpectedRelationshipState)
+async def unicorn_exception_handler(
+        request: Request,
+        exc: HTTPExceptionJSON):
+    return JSONResponse(
+        status_code=400,
+        content={"message": "UnexpectedRelationshipState"})
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize MongoDB on startup
@@ -44,6 +68,15 @@ async def lifespan(app: FastAPI):
     yield
     # Close MongoDB connection on shutdown
     await close_mongo_connection()
+    
+    
+@app.on_event("startup")
+async def startup():
+    pass
+
+@app.on_event("shutdown")
+async def shutdown():
+    pass
     
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.router.lifespan = lifespan
