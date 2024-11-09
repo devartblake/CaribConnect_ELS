@@ -74,6 +74,18 @@ wheels = [
 ]
 
 [[package]]
+name = "aiohttp-retry"
+version = "2.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/61/ebda4d8e3d8cfa1fd3db0fb428db2dd7461d5742cea35178277ad180b033/aiohttp_retry-2.9.1.tar.gz", hash = "sha256:8eb75e904ed4ee5c2ec242fefe85bf04240f685391c4879d8f541d6028ff01f1", size = 13608 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/99/84ba7273339d0f3dfa57901b846489d2e5c2cd731470167757f1935fffbd/aiohttp_retry-2.9.1-py3-none-any.whl", hash = "sha256:66d2759d1921838256a05a3f80ad7e724936f083e35be5abb5e16eed6be6dc54", size = 9981 },
+]
+
+[[package]]
 name = "aioredis"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -252,6 +264,7 @@ dependencies = [
     { name = "sqlmodel" },
     { name = "stripe" },
     { name = "tenacity" },
+    { name = "twilio" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "websocket-client" },
     { name = "websockets" },
@@ -317,6 +330,7 @@ requires-dist = [
     { name = "sqlmodel", specifier = ">=0.0.21,<1.0.0" },
     { name = "stripe", specifier = ">=5.0.0" },
     { name = "tenacity", specifier = ">=8.2.3,<9.0.0" },
+    { name = "twilio", specifier = ">=9.3.5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.6" },
     { name = "websocket-client", specifier = "==1.8.0" },
     { name = "websockets", specifier = "==13.1" },
@@ -2005,6 +2019,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a3/4d/6a19536c50b849338fcbe9290d562b52cbdcf30d8963d3588a68a4107df1/tenacity-8.5.0.tar.gz", hash = "sha256:8bc6c0c8a09b31e6cad13c47afbed1a567518250a9a171418582ed8d9c20ca78", size = 47309 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/3f/8ba87d9e287b9d385a02a7114ddcef61b26f86411e121c9003eb509a1773/tenacity-8.5.0-py3-none-any.whl", hash = "sha256:b594c2a5945830c267ce6b79a166228323ed52718f30302c1359836112346687", size = 28165 },
+]
+
+[[package]]
+name = "twilio"
+version = "9.3.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "aiohttp-retry" },
+    { name = "pyjwt" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/38/81b5a13c0e81aeb67ed011bdb6f6f765662501129943a1eabfd58e6ca1c0/twilio-9.3.5.tar.gz", hash = "sha256:608d78a903d403465aac1840c58a6546a090b7e222d2bf539a93c3831072880c", size = 952198 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/4e/cabe7beb76ca8c416acfa73aa3a80be673e7f16d7c4bb58050483963a599/twilio-9.3.5-py2.py3-none-any.whl", hash = "sha256:d6a97a77b98cc176a61c960f11894af385bc1c11b93e2e8b79fdfb9601788fb0", size = 1819672 },
 ]
 
 [[package]]

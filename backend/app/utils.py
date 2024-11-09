@@ -113,3 +113,10 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except InvalidTokenError:
         return None
+
+def reset_otp(self):
+    """Resets OTP fields after verification or expiration."""
+    self.otp_code = None
+    self.opt_created_at = None
+    self.opt_expies_at = None
+    self.otp_attempts = 0

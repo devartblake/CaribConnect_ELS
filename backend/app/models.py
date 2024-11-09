@@ -23,6 +23,7 @@ class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=40)
     full_name: str | None = Field(default=None, max_length=255)
+    phone: Optional[str] = Field(default=None, max_length=15)  # Add phone field
 
 # Properties to receive via API on update, all are optional
 class UserUpdate(UserBase):
@@ -50,6 +51,7 @@ class User(UserBase, table=True):
     posts: list["Post"] = Relationship(back_populates="author", cascade_delete=True)
     comments: list["Comment"] = Relationship(back_populates="user", cascade_delete=True)
     professionals: list["Professional"] = Relationship(back_populates="user") # Relationship to Professional
+    otps: list["OTP"] = Relationship(back_populates="user")
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
@@ -71,6 +73,9 @@ class UserAddress(SQLModel, table=True):
     postal_code: str = Field(max_length=20)
     latitude: float | None = Field(default=None)
     longitude: float | None = Field(default=None)
+    phone: Optional[str] = Field(default=None, max_length=15)  # Add phone field
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = Field(default=None)
 
     # Relationship back to User
     user: User = Relationship(back_populates="addresses")
@@ -432,3 +437,15 @@ class IPAddressUpdate(SQLModel):
 class GeoIP(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     ip_addresses: list["IPAddress"] = Relationship(back_populates="geoip")
+
+
+class OTP(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    otp_code: str = Field(max_length=6)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: datetime
+    attempts: int = Field(default=0)
+    user_id: int = Field(foreign_key="user.id")
+
+    user: Optional[User] = Relationship(back_populates="otps")
+    

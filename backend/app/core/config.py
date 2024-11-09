@@ -101,6 +101,11 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
 
+    # Twilio settings
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER")
+
     # Redis settings
     REDIS_HOST: str =  "localhost"
     REDIS_PORT: int =  6379
