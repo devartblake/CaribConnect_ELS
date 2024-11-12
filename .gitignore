@@ -18,3 +18,4 @@ docker-entrypoint.sh
 backend/uv.lock
 data/neo4j/logs/
 data/neo4j/data/
+backend/app/__models.py

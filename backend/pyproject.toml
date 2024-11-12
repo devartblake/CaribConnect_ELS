@@ -1,7 +1,7 @@
 [project]
 name = "app"
 version = "0.1.0"
-description = ""
+description = "Where connection meets convenience!"
 requires-python = ">=3.12.7,<4.0"
 dependencies = [
     "fastapi[standard]<1.0.0,>=0.114.2",
@@ -66,6 +66,11 @@ dependencies = [
     "websocket-client==1.8.0",
     "websockets==13.1",
 ]
+
+[project.urls]
+"Homepage" = "http://caribconnect.com"
+"Code" = "https://github.com/devartblake/caribconnect_els"
+"Issue Tracker" = "https://github.com/devartblake/caribconnect_els/issues"
 
 [tool.uv]
 dev-dependencies = [
