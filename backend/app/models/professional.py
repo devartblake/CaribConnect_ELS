@@ -24,3 +24,14 @@ class Professional(SQLModel, table=True):
     user: "User" = Relationship(back_populates="professionals")
     # Relationships back to Services
     services: list["Service"] = Relationship(back_populates="professionals")
+
+class ProfessionalCreate(SQLModel):
+    name: str
+    specialization: str
+    experience_years: Optional[int] = None
+    user_id: uuid.UUID
+
+class ProfessionalUpdate(SQLModel):
+    name: Optional[str] = None
+    specialization: Optional[str] = None
+    experience_years: Optional[int] = None

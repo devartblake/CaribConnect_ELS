@@ -8,7 +8,7 @@ from sqlalchemy import JSON
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
 # Define the GeoIP model components (like City, Country, etc.)
-class ASN(SQLModel, table=True):
+class Asn(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     autonomous_system_number: int | None
     autonomous_system_organization: str | None
@@ -71,7 +71,7 @@ class GeoLocation(SQLModel):
     country: Country | None
     city: City | None
     location: Location | None
-    asn: ASN | None
+    asn: Asn | None
     postal: Postal | None
 
 # Define the IPAddress model
@@ -86,7 +86,7 @@ class IPAddress(SQLModel, table=True):
     country_id: int | None = Field(default=None, foreign_key="country.id")
     country: Country | None = Relationship(back_populates="ip_addresses")
     asn_id: int | None = Field(default=None, foreign_key="asn.id")
-    asn: ASN | None = Relationship(back_populates="ip_addresses")
+    asn: Asn | None = Relationship(back_populates="ip_addresses")
     location_id: int | None = Field(default=None, foreign_key="location.id")
     location: Location | None = Relationship(back_populates="ip_addresses")
     # Example relationships to other models like GeoIP

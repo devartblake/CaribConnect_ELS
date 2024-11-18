@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from pydantic import EmailStr
-from sqlalchemy import JSON
-from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
+from sqlalchemy import JSON, Column
+from sqlmodel import Field, Relationship, SQLModel
 
 # Payments status enum
 class PaymentStatus(str, Enum):
@@ -17,16 +17,16 @@ class PaymentStatus(str, Enum):
 # Payment Method Type enum
 class PaymentMethodType(str, Enum):
     CREDIT_CARD = "credit_card"
+    ACH_DIRECT_DEBIT = "us_bank_account"
     AFFIRM = "affirm"
     ATFER_PAY_CLEAR_PAY = "afterpay_clearpay"
     AMAZON_PAY = "amazon_pay"
     CARD_PRESENT = "card_present"
-    CASH_APP_PAY = "cashapp"
+    CASH_APP = "cashapp"
     KLARNA = "klarna"
     LINK = "link"
-    PAY_PAL = "pay_pal"
+    PAY_PAL = "paypal"
     SAMSUNG_PAY = "samsung_pay"
-    ACH_DIRECT_DEBIT = "us_bank_account"
     ZIP = "zip"
 
 # Payment provide enum
@@ -77,14 +77,17 @@ class PayPalDetails(SQLModel):
     
 # Payments model
 class Payment(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, nullable=False)
     user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False)
-    amount: float = Field(gt=0)  # Greater than 0
-    currency: str = Field(default="USD")
+    amount: float = Field(gt=0, le=1_000_000, nullable=False)  # Example limit
+    currency: str = Field(default="USD", max_length=3)  # ISO 4217 code
     provider: PaymentProvider = Field(default=PaymentProvider.PAYPAL)
-    status: PaymentStatus = Field(default=PaymentStatus.PENDING)
-    transaction_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    payment_method_type: PaymentMethodType = Field(nullable=False)
+    transaction_id: str = Field(nullable=False, index=True)
+    status: PaymentStatus = Field(default=PaymentStatus.PENDING, nullable=False)
+    payment_metadata: dict = Field(sa_column=Column(JSON))  # For extensible details
+    locale: Optional[str] = Field(default=None, max_length=5)  # e.g., en_US
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     completed_at: datetime | None = None
     user: "User" = Relationship(back_populates="payments")
 
@@ -117,6 +120,19 @@ class PaymentResponse(SQLModel):
     customer_id: uuid.UUID | None = None
     order_id: str | None = None
 
+# Payment Create, Update and Delete
+class PaymentCreate(SQLModel):
+    amount: float
+    currency: str
+    payment_date: Optional[str] = None
+    payment_status: str
+    user_id: uuid.UUID
+
+class PaymentUpdate(SQLModel):
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    payment_status: Optional[str] = None
+    
 # Refund Models
 class RefundRequest(SQLModel):
     transaction_id: str  # Braintree transaction ID for the original payment

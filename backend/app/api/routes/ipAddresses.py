@@ -4,8 +4,8 @@ from sqlmodel import Session, select
 
 from app.api.deps import get_db  # Assuming you have a dependency to manage sessions
 from app.core.db import engine
-from app.models import IPAddress,  IPAddressUpdate
-from app.schemas.ipvSchema import IPAddressDetailSchema, IPAddressReadSchema, IPAddressCreateSchema
+from app.models import IPAddress
+from app.schemas.ipvSchema import IPAddressDetailSchema, IPAddressReadSchema, IPAddressCreateSchema, IPAddressUpdateSchema
 
 router = APIRouter()
 
@@ -58,7 +58,7 @@ def update_ip_address(
     *,
     db: Session = Depends(get_db),
     ip_address_id: int,
-    ip_address_in: IPAddressUpdate
+    ip_address_in: IPAddressUpdateSchema
 ):
     ip_address = db.get(IPAddress, ip_address_id)
     if not ip_address:
