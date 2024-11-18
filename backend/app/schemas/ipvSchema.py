@@ -2,7 +2,7 @@ from pydantic import BaseModel, IPvAnyAddress
 
 
 # Define the schemas for related models (ASN, City, Country, etc.)
-class ASNSchema(BaseModel):
+class AsnSchema(BaseModel):
     autonomous_system_number: int | None = None
     autonomous_system_organization: str | None = None
     ip_address: str | None = None
@@ -59,7 +59,7 @@ class GeoLocationSchema(BaseModel):
     country: CountrySchema | None = None
     city: CitySchema | None = None
     location: LocationSchema | None = None
-    asn: ASNSchema | None = None
+    asn: AsnSchema | None = None
     postal: PostalSchema | None = None
 
     class Config:
@@ -82,7 +82,7 @@ class IPAddressReadSchema(IPAddressBase):
     id: int
     city: CitySchema | None = None
     country: CountrySchema | None = None
-    asn: ASNSchema | None = None
+    asn: AsnSchema | None = None
     location: LocationSchema | None = None
     traits: TraitsSchema | None = None
 
