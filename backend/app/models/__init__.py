@@ -1,6 +1,7 @@
 
 import importlib
 
+
 def dynamic_import(model_name: str):
     return importlib.import_module(f'app.models.{model_name}')
 
@@ -9,9 +10,11 @@ AuditInfoCreate = dynamic_import("auditinfo").AuditInfoCreate
 AuditInfoUpdate = dynamic_import("auditinfo").AuditInfoUpdate
 Currency = dynamic_import("currency").Currency
 CurrencyFormat = dynamic_import("currency").CurrencyFormat
+ExchangeRate = dynamic_import("exchangerate").ExchangeRate
 CustomizationInfo = dynamic_import("customizationinfo").CustomizationInfo
 CustomizationInfoCreate = dynamic_import("customizationinfo").CustomizationInfoCreate
 CustomizationInfoUpdate = dynamic_import("customizationinfo").CustomizationInfoUpdate
+GeoLocation = dynamic_import("networklocationdata").GeoLocation
 GeoIP = dynamic_import("networklocationdata").GeoIP
 IPAddress = dynamic_import("networklocationdata").IPAddress
 IPAddressUpdate = dynamic_import("networklocationdata").IPAddressUpdate
@@ -37,9 +40,9 @@ Service = dynamic_import("service").Service
 Settings = dynamic_import("settings").Settings
 SettingsCreate = dynamic_import("settings").SettingsCreate
 SettingsUpdate = dynamic_import("settings").SettingsUpdate
-Status = dynamic_import("settings").Status
-StatusCreate = dynamic_import("settings").StatusCreate
-StatusUpdate = dynamic_import("settings").StatusUpdate
+Status = dynamic_import("status").Status
+StatusCreate = dynamic_import("status").StatusCreate
+StatusUpdate = dynamic_import("status").StatusUpdate
 Theme = dynamic_import("theme").Theme
 ThemeCreate = dynamic_import("theme").ThemeCreate
 ThemeUpdate = dynamic_import("theme").ThemeUpdate
@@ -50,6 +53,7 @@ UserUpdateMe = dynamic_import("user").UserUpdateMe
 UserPublic= dynamic_import("user").UserPublic
 UsersPublic = dynamic_import("user").UsersPublic
 UserRegister = dynamic_import("user").UserRegister
+Record = dynamic_import("user").Record
 UserRole = dynamic_import("userrole").UserRole
 Token = dynamic_import("user").Token
 TokenPayload = dynamic_import("user").TokenPayload

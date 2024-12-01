@@ -1,31 +1,33 @@
 from fastapi import APIRouter
 
-from app.api.routes import ( 
-    items,
-    login,
+from app.api.routes import (
+    auditInfos,
     currencies,
     customizationInfo,
+    exchange_rates,
     ipAddresses,
+    items,
+    login,
+    mongo,
+    otp,
     pageviews,
     payments,
     professionals,
-    mongo,
-    users,
-    utils,
-    theme,
+    profiles,
+    roles,
     services,
     settings,
-    otp,
-    auditInfos,
+    theme,
     userRoles,
-    roles,
-    profiles,
+    users,
+    utils,
 )
 
 api_router = APIRouter()
 api_router.include_router(auditInfos.router, prefix="/auditInfos", tags=["AuditInfos"])
 api_router.include_router(currencies.router, prefix="/currencies", tags=["Currencies"])
 api_router.include_router(customizationInfo.router, prefix="/customizationInfo", tags=["CustomizationInfo"])
+api_router.include_router(exchange_rates.router, prefix="/exchange-rate", tags=["ExchageRates"])
 api_router.include_router(ipAddresses.router, prefix="/ipAddress", tags=["ipAddress"])
 api_router.include_router(items.router, prefix="/items", tags=["Items"])
 api_router.include_router(login.router, tags=["Login"])

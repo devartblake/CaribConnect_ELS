@@ -101,6 +101,10 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
 
+    # Exchange Rate API
+    EXCHANGE_RATE_URI: str = os.getenv("EXCHANGE_RATE_URI", "https://api.exchangeratesapi.io/latest")
+    EXCHANGE_RATE_KEY: str = os.getenv("EXCHANGE_RATE_KEY")
+
     # Twilio settings
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID")
     TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN")

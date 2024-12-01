@@ -19,4 +19,4 @@ class ServiceRead(ServiceBase):
     professional_id: Optional[uuid.UUID]
 
     class Config:
-        orm_mode = True
+        from_attributes = True

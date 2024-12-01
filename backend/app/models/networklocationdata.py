@@ -67,17 +67,20 @@ class Postal(SQLModel):
     code: str | None
 
 class GeoLocation(SQLModel):
-    continent: Continent | None
-    country: Country | None
-    city: City | None
+    city: str | None = Field(default=None, max_length=100)
+    continent: str | None = Field(default=None, max_length=50)
+    country: str | None = Field(default=None, max_length=100)
+    latitude: float | None = Field(default=None)
+    longitude: float | None = Field(default=None)
     location: Location | None
     asn: Asn | None
-    postal: Postal | None
+    postal_code: str | None = Field(default=None, max_length=20)
 
 # Define the IPAddress model
 class IPAddress(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    ip_address: str = Field(max_length=45)  # Store IP as a string
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    ip_address: str = Field(..., max_length=45, unique=True)  # Store IP as a string
+    is_active: bool = Field(default=True)
 
     # Relationships to GeoIP models
     city_id: int | None = Field(default=None, foreign_key="city.id")

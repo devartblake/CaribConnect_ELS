@@ -1,12 +1,16 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Optional
 
 from pydantic import EmailStr
 from sqlalchemy import JSON
 from sqlmodel import Column, Field, Relationship, SQLModel
-from .customizationinfo import CustomizationInfo  # Import CustomizationInfo if it's in a separate module
+
+from .customizationinfo import (
+    CustomizationInfo,  # Import CustomizationInfo if it's in a separate module
+)
+
 
 # Shared properties
 class UserBase(SQLModel):
@@ -25,7 +29,7 @@ class UserRegister(SQLModel):
     first_name: str | None = Field(default=None, max_length=20)
     last_name: str | None = Field(default=None, max_length=20)
     full_name: str | None = Field(default=None, max_length=255)
-    phone: Optional[str] = Field(default=None, max_length=15)  # Add phone field
+    phone: str | None = Field(default=None, max_length=15)  # Add phone field
 
 # Properties to receive via API on update, all are optional
 class UserUpdate(UserBase):
@@ -43,11 +47,11 @@ class UpdatePassword(SQLModel):
 class Territory(SQLModel, table=True) :
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str
-    manager: bool    
+    manager: bool
     user_id: int = Field(foreign_key="user.id")
     # Relationships
     users: Optional["User"] = Relationship(back_populates="territories")
-    
+
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -57,12 +61,12 @@ class UsersPublic(SQLModel):
     count: int
 
 # Database model, database table inferred from class name
-class User(UserBase, table=True):    
+class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     is_active: bool = Field(default=True)
     is_superuser: bool = Field(default=False)
-    full_name: Optional[str] = Field(default=None, max_length=255)
+    full_name: str | None = Field(default=None, max_length=255)
     otp_codes: list["OTP"] = Relationship(back_populates="user")
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
     addresses: list["UserAddress"] = Relationship(back_populates="user", cascade_delete=True)
@@ -73,12 +77,14 @@ class User(UserBase, table=True):
     comments: list["Comment"] = Relationship(back_populates="user", cascade_delete=True)
     professionals: list["Professional"] = Relationship(back_populates="user") # Relationship to Professional
     audit_info: Optional["AuditInfo"] = Relationship(back_populates="user")
+    settings: Optional["Settings"] = Relationship(back_populates="user")
+    status: Optional["Status"] = Relationship(back_populates="user", sa_relationship_kwargs={"cascade": "all, delete"})
     customize_info: Optional["CustomizationInfo"] = Relationship(back_populates="user", sa_relationship_kwargs={"foreign_keys": [CustomizationInfo.user_id]})
     # Relationship to UserRole
     user_roles: list["UserRole"] = Relationship(back_populates="user")
     # Relationship with Territory
     territories: list["Territory"] = Relationship(back_populates="users")
-    
+
 # New UserAddress Model
 class UserAddress(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -93,7 +99,7 @@ class UserAddress(SQLModel, table=True):
     longitude: float | None = Field(default=None)
     phone: Optional[str] = Field(default=None, max_length=15)  # Add phone field
     language: Optional[list[str]] = Field(default=[], sa_column=Column(JSON))
-    locale: str
+    locale: Optional[str] = Field(default="en_US")
     audit_info_id: Optional[int] = Field(default=None, foreign_key="auditinfo.id") # Relationship with AuditInfo
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default=None)

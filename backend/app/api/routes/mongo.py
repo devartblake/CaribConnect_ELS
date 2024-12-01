@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
-from app.models import User
 from sqlmodel import Session, select
+
 from app.core.db import get_database_session, get_mongodb
+from app.models import User
 
 router = APIRouter()
 

@@ -1,9 +1,9 @@
+from motor.motor_asyncio import AsyncIOMotorClient
 from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
 from app.models import User, UserCreate
-from motor.motor_asyncio import AsyncIOMotorClient
 
 # Create the SQLAlchemy (SQLModel)
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
@@ -43,6 +43,9 @@ def init_db(session: Session) -> None:
 
 # Dependency to get a session
 def get_database_session():
+    """
+    Yield a database session for dependency injection in FastAPI or other contexts.
+    """
     db = SessionLocal()
     try:
         yield db
@@ -51,15 +54,29 @@ def get_database_session():
 
 # Initialize MongoDB
 async def init_mongo():
+    """
+    Initializes the MongoDB connection using Motor.
+    """
     global mongodb_client, mongodb_db
     mongodb_client = AsyncIOMotorClient(settings.MONGO_URI)
-    mongodb_db = mongodb_client[settings.MONGO_DB_NAME]
+    mongodb_db = mongodb_client[settings.MONGO_DB_NAME]  # Set the DB name
 
 async def close_mongo_connection():
+    """
+    Closes the MongoDB connection.
+    """
     global mongodb_client
     if mongodb_client:
         mongodb_client.close()
-        
+
 # Dependency to get MongoDB connection
 def get_mongodb():
+    """
+    Returns the MongoDB database instance.
+    """
+    if mongodb_db is None:
+        raise RuntimeError("MongoDB has not been initialized. Call init_mongo first.")
     return mongodb_db
+
+# Explicitly expose mongodb_db as mongo_db for clarity
+mongo_db = mongodb_db  # Alias for better compatibilit

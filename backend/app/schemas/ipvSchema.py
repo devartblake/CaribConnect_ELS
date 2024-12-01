@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, IPvAnyAddress
 
 
@@ -9,7 +11,7 @@ class AsnSchema(BaseModel):
     network: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CitySchema(BaseModel):
     geoname_id: int | None = None
@@ -18,7 +20,7 @@ class CitySchema(BaseModel):
     names: dict | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CountrySchema(BaseModel):
     geoname_id: int | None = None
@@ -29,7 +31,7 @@ class CountrySchema(BaseModel):
     names: dict | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LocationSchema(BaseModel):
     accuracy_radius: int | None = None
@@ -39,22 +41,22 @@ class LocationSchema(BaseModel):
     time_zone: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class TraitsSchema(BaseModel):
     network: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PostalSchema(BaseModel):
     confidence: int | None = None
     code: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-class GeoLocationSchema(BaseModel):
+class GeoLocationBase(BaseModel):
     continent: str | None = None  # Assuming a simple string here
     country: CountrySchema | None = None
     city: CitySchema | None = None
@@ -62,15 +64,29 @@ class GeoLocationSchema(BaseModel):
     asn: AsnSchema | None = None
     postal: PostalSchema | None = None
 
+class GeoLocationCreateSchema(GeoLocationBase):
+    pass
+
+class GeoLocationUpdateSchema(BaseModel):
+    city: str | None
+    continent: str | None
+    country: str | None
+    latitude: float | None
+    longitude: float | None
+    postal_code: str | None
+
+class GeoLocationReadSchema(GeoLocationBase):
+    id: uuid.UUID
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Update IPAddress schemas
 class IPAddressBase(BaseModel):
     ip_address: IPvAnyAddress
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class IPAddressCreateSchema(IPAddressBase):
     pass
@@ -87,10 +103,10 @@ class IPAddressReadSchema(IPAddressBase):
     traits: TraitsSchema | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class IPAddressDetailSchema(IPAddressReadSchema):
-    geo_location: GeoLocationSchema | None = None  # Nested GeoLocation details
+    geo_location: GeoLocationReadSchema | None = None  # Nested GeoLocation details
 
     class Config:
-        orm_mode = True
+        from_attributes = True

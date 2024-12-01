@@ -13,7 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 from mjml import mjml2html  # For MJML to HTML conversion
 
 # Configure Celery
-celery = Celery(
+celery_app = Celery(
     "tasks",
     broker="amqp://guest:guest@rabbitmq:5672//",
     backend="redis://redis:6379/0",
@@ -39,11 +39,11 @@ conf = ConnectionConfig(
     USE_CREDENTIALS=True,
 )
 
-@celery.task
+@celery_app.task
 def send_email(email: str, template_name: str, context: dict):
     # Simulate processing time
     time.sleep(random.randint(1, 4))
-    
+
     # Load and render the template
     template = env.get_template(f"{template_name}.html")
     html_content = template.render(context)
@@ -64,7 +64,7 @@ def send_email(email: str, template_name: str, context: dict):
     # Send email using FastMail
     fast_mail = FastMail(conf)
     fast_mail.send_message(message)
-    
+
     celery_log.info("Email has been sent to %s", email)
     return {"msg": f"Email has been sent to {email}", "details": {"destination": email, }, }
 

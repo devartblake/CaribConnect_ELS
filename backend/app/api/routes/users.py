@@ -2,59 +2,53 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import col, delete, func, select
+from sqlmodel import Session, col, delete, func, select
 
 from app import crud
 from app.api.deps import (
     CurrentUser,
     SessionDep,
     get_current_active_superuser,
+    get_db,
 )
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
     Item,
     Message,
-    UpdatePassword,
     User,
-    UserCreate,
     UserPublic,
-    UserRegister,
     UsersPublic,
-    UserUpdate,
-    UserUpdateMe,
+)
+from app.schemas.userSchema import (
+    UpdatePasswordSchema,
+    UserCreateSchema,
+    UserReadSchema,
+    UserRegisterSchema,
+    UserUpdateMeSchema,
+    UserUpdateSchema,
 )
 from app.utils import generate_new_account_email, send_email
 
 router = APIRouter()
 
+@router.get("/", response_model=list[UserReadSchema])
+async def get_all_users(session: Session = Depends(get_db)):
+    users = session.query(User).all()
+    return users
 
-@router.get(
-    "/",
-    dependencies=[Depends(get_current_active_superuser)],
-    response_model=UsersPublic,
-)
-def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-    """
-    Retrieve users.
-    """
-
-    count_statement = select(func.count()).select_from(User)
-    count = session.exec(count_statement).one()
-
-    statement = select(User).offset(skip).limit(limit)
-    users = session.exec(statement).all()
-
-    return UsersPublic(data=users, count=count)
-
+@router.get("/{user_id}", response_model=UserReadSchema)
+async def get_user(user_id: uuid.UUID, session: Session = Depends(get_db)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
 
 @router.post(
     "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
 )
-def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
-    """
-    Create new user.
-    """
+def create_user(*, session: SessionDep, user_in: UserCreateSchema) -> Any:
+    """ Create new user. """
     user = crud.get_user_by_email(session=session, email=user_in.email)
     if user:
         raise HTTPException(
@@ -74,15 +68,9 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
         )
     return user
 
-
 @router.patch("/me", response_model=UserPublic)
-def update_user_me(
-    *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
-) -> Any:
-    """
-    Update own user.
-    """
-
+def update_user_me( *, session: SessionDep, user_in: UserUpdateMeSchema, current_user: CurrentUser) -> Any:
+    """ Update own user. """
     if user_in.email:
         existing_user = crud.get_user_by_email(session=session, email=user_in.email)
         if existing_user and existing_user.id != current_user.id:
@@ -97,10 +85,30 @@ def update_user_me(
     session.refresh(current_user)
     return current_user
 
+@router.patch(
+    "/{user_id}",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserPublic,
+)
+def update_user( *, session: SessionDep, user_id: uuid.UUID, user_in: UserUpdateSchema,) -> Any:
+    """ Update a user. """
+    db_user = session.get(User, user_id)
+    if not db_user:
+        raise HTTPException( status_code=404, detail="The user with this id does not exist in the system", )
+    if user_in.email:
+        existing_user = crud.get_user_by_email(session=session, email=user_in.email)
+        if existing_user and existing_user.id != user_id:
+            raise HTTPException( status_code=status.HTTP_409_CONFLICT, detail="User with this email already exists" )
+    db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
+    for key, value in user_in.items():
+        setattr(db_user, key, value)
+    session.commit()
+    session.refresh(db_user)
+    return db_user
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+    *, session: SessionDep, body: UpdatePasswordSchema, current_user: CurrentUser
 ) -> Any:
     """
     Update own password.
@@ -120,6 +128,23 @@ def update_password_me(
     session.commit()
     return Message(message="Password updated successfully")
 
+@router.get(
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UsersPublic,
+)
+def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
+    """
+    Retrieve users.
+    """
+
+    count_statement = select(func.count()).select_from(User)
+    count = session.exec(count_statement).one()
+
+    statement = select(User).offset(skip).limit(limit)
+    users = session.exec(statement).all()
+
+    return UsersPublic(data=users, count=count)
 
 @router.get("/me", response_model=UserPublic)
 def read_user_me(current_user: CurrentUser) -> Any:
@@ -127,7 +152,6 @@ def read_user_me(current_user: CurrentUser) -> Any:
     Get current user.
     """
     return current_user
-
 
 @router.delete("/me", response_model=Message)
 def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
@@ -147,7 +171,7 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
 
 
 @router.post("/signup", response_model=UserPublic)
-def register_user(session: SessionDep, user_in: UserRegister) -> Any:
+def register_user(session: SessionDep, user_in: UserRegisterSchema) -> Any:
     """
     Create new user without the need to be logged in.
     """
@@ -157,7 +181,7 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The user with this email already exists in the system",
         )
-    user_create = UserCreate.model_validate(user_in)
+    user_create = UserCreateSchema.model_validate(user_in)
     user = crud.create_user(session=session, user_create=user_create)
     return user
 
@@ -180,39 +204,6 @@ def read_user_by_id(
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
-
-
-@router.patch(
-    "/{user_id}",
-    dependencies=[Depends(get_current_active_superuser)],
-    response_model=UserPublic,
-)
-def update_user(
-    *,
-    session: SessionDep,
-    user_id: uuid.UUID,
-    user_in: UserUpdate,
-) -> Any:
-    """
-    Update a user.
-    """
-
-    db_user = session.get(User, user_id)
-    if not db_user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this id does not exist in the system",
-        )
-    if user_in.email:
-        existing_user = crud.get_user_by_email(session=session, email=user_in.email)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="User with this email already exists"
-            )
-
-    db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
-    return db_user
 
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])

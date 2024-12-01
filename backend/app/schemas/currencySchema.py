@@ -1,7 +1,9 @@
-from decimal import Decimal
 import uuid
-from pydantic import BaseModel, Field
+from decimal import Decimal
 from typing import Optional
+
+from pydantic import BaseModel, Field
+
 
 class CurrencyBase(BaseModel):
     name: str
@@ -26,8 +28,8 @@ class CurrencyRead(CurrencyBase):
     id: uuid.UUID
 
     class Config:
-        orm_mode = True
-        
+        from_attributes = True
+
 class CurrencyFormatSchema(BaseModel):
     decimal_separator: str = Field(..., max_length=10, example="Period")
     thousand_separator: str = Field(..., max_length=10, example="Comma")
@@ -43,4 +45,4 @@ class CurrencySchema(BaseModel):
     format: Optional[CurrencyFormatSchema]
 
     class Config:
-        orm_mode = True
+        from_attributes = True

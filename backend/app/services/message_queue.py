@@ -1,6 +1,8 @@
 import asyncio
 import logging
+
 import aio_pika
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

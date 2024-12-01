@@ -1,7 +1,8 @@
 import os
-from jinja2 import Environment, FileSystemLoader
+
 from celery import Celery
 from celery.schedules import crontab
+from jinja2 import Environment, FileSystemLoader
 from kombu import Exchange, Queue
 
 # Configure Celery
@@ -16,6 +17,7 @@ celery_worker = Celery(
 )
 
 celery_worker.conf.update(
+    timezone="UTC", # Set the timezone
     result_expires=3600,
     task_serializer='json',
     result_serializer='json',
@@ -50,11 +52,11 @@ def send_email_notification(email_type, recipient, **kwargs):
         "record": "record.html",
         "notification": "notification.html",
     }
-    
+
     # Render the chosen template
     template_name = template_mapping.get(email_type, "notification.html")
     email_content = render_template(template_name, **kwargs)
-    
+
     # Example email sending function (you'll need to replace this with actual email-sending logic)
     print(f"Sending email to {recipient}")
     print("Content:")
@@ -76,5 +78,11 @@ celery_worker.conf.beat_schedule = {
         'task': 'app.services.tasks.generate-daily-report',
         'schedule': crontab(minute=0, hour=0),  # Every day at midnight
         'args': ('report', 'recipient@example.com', {'name': 'User'}),
-    }
+    },
+    'update-exchange-rates-every-hour': {
+        'task': 'tasks.update_exchange_rates_task',
+        'schedule': crontab(minute=0, hour='6'),  # Every six hour
+    },
 }
+
+celery_worker.autodiscover_tasks(["app.tasks"], force=True)

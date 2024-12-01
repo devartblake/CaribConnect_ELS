@@ -1,8 +1,10 @@
+import datetime
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, status
+from app.models.user import User
 from sqlmodel import Session
 from app.models import Settings, Status
-from app.schemas.settingsSchema import SettingsCreateSchema, SettingsUpdateSchema, StatusCreateSchema, StatusUpdateSchema
+from app.schemas.settingsSchema import SettingsCreateSchema, SettingsUpdateSchema, StatusCreateSchema, StatusUpdateSchema, StatusReadSchema
 from app.api.deps import get_db
 
 router = APIRouter()
@@ -58,6 +60,11 @@ async def get_status(status_id: uuid.UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Status not found")
     return db_status
 
+@router.get("/status", response_model=list[StatusReadSchema])
+async def get_all_statuses(session: Session = Depends(get_db)):
+    statuses = session.query(Status).all()
+    return statuses
+
 @router.put("/status/{status_id}", response_model=Status)
 async def update_status(status_id: uuid.UUID, status: StatusUpdateSchema, db: Session = Depends(get_db)):
     db_status = db.query(Status).filter(Status.id == status_id).first()
@@ -68,6 +75,21 @@ async def update_status(status_id: uuid.UUID, status: StatusUpdateSchema, db: Se
     db.commit()
     db.refresh(db_status)
     return db_status
+
+@router.patch("/{user_id}/status", response_model=StatusReadSchema)
+async def update_user_status(user_id: uuid.UUID, status_data: StatusUpdateSchema, session: Session = Depends(get_db)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not user.status:
+        user.status = Status()
+    for key, value in status_data.dict(exclude_unset=True).items():
+        setattr(user.status, key, value)
+    user.status.last_seen = datetime.utcnow()
+    session.add(user.status)
+    session.commit()
+    session.refresh(user.status)
+    return user.status
 
 @router.delete("/status/{status_id}")
 async def delete_status(status_id: uuid.UUID, db: Session = Depends(get_db)):

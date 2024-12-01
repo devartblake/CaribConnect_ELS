@@ -1,11 +1,10 @@
-from decimal import Decimal
 import uuid
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional, Union
+from decimal import Decimal
 
 from sqlalchemy import JSON, Numeric
 from sqlmodel import Column, Field, Relationship, SQLModel
+
 
 class Currency(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -16,9 +15,16 @@ class Currency(SQLModel, table=True):
     prefix_symbol: bool = Field(default=True)
     is_active: bool = Field(default=True)
 
+    # Reverse Relationships
+    services: list["Service"] = Relationship(back_populates="currency")
+
     # Relationship to format settings
-    format_id: Optional[uuid.UUID] = Field(default=None, foreign_key="currencyformat.id")
-    format: "CurrencyFormat" = Relationship(back_populates="currency")   
+    format_id: uuid.UUID | None = Field(default=None, foreign_key="currencyformat.id")
+    format: "CurrencyFormat" = Relationship(back_populates="currency")
+
+    # Reverse relationships
+    base_exchange_rates: list["ExchangeRate"] = Relationship(back_populates="base_currency", sa_relationship_kwargs={"foreign_keys": "ExchangeRate.base_currency_id"},)
+    target_exchange_rates: list["ExchangeRate"] = Relationship(back_populates="target_currency", sa_relationship_kwargs={"foreign_keys": "ExchangeRate.target_currency_id"},)
 
 class CurrencyFormat(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -28,4 +34,3 @@ class CurrencyFormat(SQLModel, table=True):
 
     # Reverse relationship
     currency: "Currency" = Relationship(back_populates="format")
-    

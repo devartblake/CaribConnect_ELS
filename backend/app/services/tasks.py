@@ -1,8 +1,11 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
-from app.core.db import SessionLocal
+
+from bson import ObjectId
+from celery import shared_task
+
+from app.core.db import SessionLocal, get_database_session, mongodb_db
 from app.helpers.task_helpers import (
     check_system_health,
     cleanup_old_records_db,
@@ -12,8 +15,11 @@ from app.helpers.task_helpers import (
     generate_report_db,
     update_cache,
 )
-from app.models import Notification, Record, User
+from app.models import Record
+from app.services.exchange_rate_service import ExchangeRateService
+from app.services.notification_service import NotificationService
 from app.workers.celery_worker import celery_worker
+
 from .email_service import send_email  # Assumes you have an email service
 from .message_queue import send_message
 
@@ -50,25 +56,38 @@ def send_email_task(email: str, subject: str, body: str):
         return {"status": "failed", "error": str(e)}
 
 @celery_worker.task
-def send_notification_task(user_id: int, message: str):
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            logger.warning(f"User {user_id} not found for notification")
-            return {"status": "user_not_found", "user_id": user_id}
+def send_notification_task(user_id: str, message: str):
+    """
+    Send a notification to a user and store it in MongoDB.
 
-        try:
-            notification = Notification(user_id=user.id, message=message)
-            db.add(notification)
-            db.commit()
-            db.refresh(notification)
-            send_message("notifications", message)
-            logger.info(f"Notification sent to user {user_id}: {message}")
-            return {"status": "notification_sent", "user_id": user_id, "message": message}
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error sending notification to user {user_id}: {e}")
-            return {"status": "failed", "error": str(e)}
+    Args:
+        user_id (str): The ID of the user to send the notification to.
+        message (str): The message content for the notification.
+
+    Returns:
+        dict: A result dictionary indicating the task status.
+    """
+    # Initialize the NotificationService
+    notification_service = NotificationService(db=mongodb_db)
+
+    try:
+        # Create a new notification for the user
+        notification_id = notification_service.create_notification(
+            user_id=ObjectId(user_id),  # Convert user_id to MongoDB ObjectId
+            type="system",  # Example notification type
+            content=message,
+        )
+        logger.info(f"Notification created for user {user_id}: {message}")
+
+        # Simulate sending the notification (e.g., via WebSocket, Email, etc.)
+        send_message("notifications", message)
+        logger.info(f"Notification sent to user {user_id}: {message}")
+
+        return {"status": "notification_sent", "user_id": user_id, "message": message, "notification_id": notification_id}
+
+    except Exception as e:
+        logger.error(f"Error sending notification to user {user_id}: {e}")
+        return {"status": "failed", "error": str(e)}
 
 @celery_worker.task
 def generate_report(report_id: int):
@@ -151,3 +170,15 @@ def poll_external_api():
             logger.error(f"Error logging API poll: {e}")
             return {"status": "failed", "error": str(e)}
         return {"status": "success"}
+
+@shared_task(name="tasks.update_exchange_rates_task")
+def update_exchange_rates_task():
+    """
+    Celery task to update exchange rates in the database.
+    """
+    db_session = next(get_database_session())
+    try:
+        exchange_rate_service = ExchangeRateService(db_session=db_session, celery_app=celery_worker)
+        exchange_rate_service.update_exchange_rates()
+    finally:
+        db_session.close()

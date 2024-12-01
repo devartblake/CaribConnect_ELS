@@ -30,4 +30,4 @@ def send_otp_via_twilio(user: User, otp_code: str):
         # Placeholder for sending OTP via email (implement this separately)
         pass
     else:
-        raise ValueError("User must have either a phone number or email to receive an OTP.")  
+        raise ValueError("User must have either a phone number or email to receive an OTP.")
